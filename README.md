@@ -1,1 +1,5 @@
-# sudokucalculator
+sudokucalculator
+======
+**简单的数独生成与计算器**<br>
+*生成代码感谢 soinve *<br>
+因为不擅长做数独所以写了这个，不过貌似只是最简单的查找，没增加试错..<br>
