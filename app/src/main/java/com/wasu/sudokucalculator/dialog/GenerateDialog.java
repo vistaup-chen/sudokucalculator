@@ -25,7 +25,7 @@ import butterknife.ButterKnife;
 public class GenerateDialog extends Dialog implements View.OnClickListener {
     private final String TAG = "GenerateDialog";
 
-    private final int reduceCount = 15;
+    private final int reduceCount = 45;
 
     @BindView(R.id.sub)
     Button mSub;

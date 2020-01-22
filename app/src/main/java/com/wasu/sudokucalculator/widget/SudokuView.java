@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -281,11 +282,72 @@ public class SudokuView extends View {
      * 计算单元格可行解
      * *******************************************************************************************/
     public void calculatorData(){
+        if (!fillCell()){
+            Log.d(TAG, "没填完，开始猜格子");
+
+            // 计算完成第一次，但是没有填充完成
+            // 找出第一个单元格为空时可以填的数
+            int x = 1;
+            int y = 0;
+
+            // 缓存数据
+            SparseArray<CodeDataModel> tmpCodeMap = new SparseArray<>();
+            for (int i = 0; i < mCodeMap.size(); i++) {
+                int key = mCodeMap.keyAt(i);
+                CodeDataModel model = mCodeMap.get(key);
+                tmpCodeMap.put(key, model);
+            }
+
+            while (true) {
+                // 无限循环往下找
+                int cell = findFirstEmptyCell(x, y+1);
+                if (cell != -1) {
+                    x = cell / 10;
+                    y = cell % 10;
+
+                    List<Integer> list = Tools.getCalcualtor(x, y, mCodeMap, true);
+                    // 进行一次的猜数
+                    for (Integer i : list) {
+                        if (i==0){
+                            continue;
+                        }
+                        Log.d(TAG, "当前测试第 "+x+","+y+" 格子, 填入数据 = "+i);
+                        mCodeMap.put(cell , new CodeDataModel(x,  y, i, true));
+                        if (fillCell()) {
+                            // 已经填满
+                            dealDone();
+                            return;
+                        }
+                    }
+                    // 到这里说明猜第一个格子没猜到数字，只能猜第二个格子，还原表格
+                    mCodeMap = new SparseArray<>();
+                    for (int i = 0; i < tmpCodeMap.size(); i++) {
+                        int key = tmpCodeMap.keyAt(i);
+                        CodeDataModel model = tmpCodeMap.get(key);
+                        mCodeMap.put(key, model);
+                    }
+                }else {
+                    // cell = -1 往后不存在没填满的格子
+                    dealDone();
+                    return;
+                }
+            }
+        }else {
+            // 一次填完
+            dealDone();
+        }
+    }
+
+    private void dealDone(){
+        Toast.makeText(getContext(),"计算结束",Toast.LENGTH_SHORT).show();
+    }
+
+
+    private boolean fillCell(){
         int calculatorTime = 0;
 
         for (int i=1; i<=9; i++){
             for (int j=1; j <= 9; j++){
-//                Log.d(TAG, "计算"+i+","+j);
                 if (isCellEmpty(i,j)){
                     // 当前单元格是空的
                     List<Integer> list = Tools.getCalcualtor(i,j,mCodeMap, true);
@@ -304,13 +366,17 @@ public class SudokuView extends View {
                 calculatorTime = calculatorTime + 1;
                 if (calculatorTime > 1000000){
                     Toast.makeText(getContext(),"计算超过"+calculatorTime+"次，强制退出",Toast.LENGTH_SHORT).show();
-                    return;
+                    return false;
                 }
             }
         }
 
         invalidate();
-        Toast.makeText(getContext(),"计算结束",Toast.LENGTH_SHORT).show();
+        if (isAllFilled()){
+            return true;
+        }else {
+            return false;
+        }
     }
 
 
@@ -322,5 +388,25 @@ public class SudokuView extends View {
     // 当前单元格是否为空
     private boolean isCellEmpty(int i, int j){
         return mCodeMap.get(i*10+j) == null;
+    }
+
+    /**
+     * 横向顺序查找第一个没有填满的格子
+     **/
+    private int findFirstEmptyCell(int k, int m) {
+        for (int i = k; i <= 9; i++) {
+            for (int j = m; j <= 9; j++) {
+                if (mCodeMap.get(i * 10 + j) == null) {
+                    return i * 10 + j;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    // 是否已经全部填满
+    private boolean isAllFilled(){
+        return mCodeMap.size() == 81;
     }
 }

@@ -1,5 +1,6 @@
 package com.wasu.sudokucalculator.generate;
 
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.wasu.sudokucalculator.model.CodeDataModel;
@@ -12,6 +13,8 @@ import java.util.Random;
 import java.util.Set;
 
 public class GenerateTool {
+    private static final String TAG = "GenerateTool";
+
     static SparseArray<CodeDataModel> array;
 
     public static SparseArray<CodeDataModel> getMap(){
@@ -63,6 +66,7 @@ public class GenerateTool {
                 array.put((i+1)*10+j+1, new CodeDataModel(i+1,j+1,source[i][j], true));
             }
 //            System.out.println(Arrays.toString(source[i]));
+            Log.d(TAG, Arrays.toString(source[i]));
         }
     }
 

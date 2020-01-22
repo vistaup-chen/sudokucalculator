@@ -25,6 +25,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindView(R.id.generate)
     Button mGenerate;
 
+    @BindView(R.id.clear)
+    Button mClear;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mCalculator.setOnClickListener(this::onClick);
         mGenerate.setOnClickListener(this::onClick);
+        mClear.setOnClickListener(this::onClick);
     }
 
     @Override
@@ -50,6 +54,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
                 dialog.show();
+                break;
+            case R.id.clear:
+                SparseArray<CodeDataModel> array = new SparseArray<>();
+                sudokuView.setCodeMap(array);
+                sudokuView.invalidate();
                 break;
         }
     }
