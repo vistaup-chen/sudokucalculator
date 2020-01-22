@@ -283,66 +283,135 @@ public class SudokuView extends View {
      * *******************************************************************************************/
     public void calculatorData(){
         if (!fillCell()){
+            // 直接填没填完
             Log.d(TAG, "没填完，开始猜格子");
-
-            // 计算完成第一次，但是没有填充完成
-            // 找出第一个单元格为空时可以填的数
-            int x = 1;
-            int y = 0;
-
-            // 缓存数据
-            SparseArray<CodeDataModel> tmpCodeMap = new SparseArray<>();
-            for (int i = 0; i < mCodeMap.size(); i++) {
-                int key = mCodeMap.keyAt(i);
-                CodeDataModel model = mCodeMap.get(key);
-                tmpCodeMap.put(key, model);
+            if (!guessOneCell()){
+                // 猜1个数也没填满
+                Log.d(TAG, "1个格子也没猜到");
+                guessTwoCell();
             }
-
-            while (true) {
-                // 无限循环往下找
-                int cell = findFirstEmptyCell(x, y+1);
-                if (cell != -1) {
-                    x = cell / 10;
-                    y = cell % 10;
-
-                    List<Integer> list = Tools.getCalcualtor(x, y, mCodeMap, true);
-                    // 进行一次的猜数
-                    for (Integer i : list) {
-                        if (i==0){
-                            continue;
-                        }
-                        Log.d(TAG, "当前测试第 "+x+","+y+" 格子, 填入数据 = "+i);
-                        mCodeMap.put(cell , new CodeDataModel(x,  y, i, true));
-                        if (fillCell()) {
-                            // 已经填满
-                            dealDone();
-                            return;
-                        }
-                    }
-                    // 到这里说明猜第一个格子没猜到数字，只能猜第二个格子，还原表格
-                    mCodeMap = new SparseArray<>();
-                    for (int i = 0; i < tmpCodeMap.size(); i++) {
-                        int key = tmpCodeMap.keyAt(i);
-                        CodeDataModel model = tmpCodeMap.get(key);
-                        mCodeMap.put(key, model);
-                    }
-                }else {
-                    // cell = -1 往后不存在没填满的格子
-                    dealDone();
-                    return;
-                }
-            }
-        }else {
-            // 一次填完
-            dealDone();
         }
+
+        // 一次填完
+        dealDone();
     }
 
     private void dealDone(){
         Toast.makeText(getContext(),"计算结束",Toast.LENGTH_SHORT).show();
     }
 
+    // 测试猜1个数
+    private boolean guessOneCell(){
+        // 计算完成第一次，但是没有填充完成
+        // 找出第一个单元格为空时可以填的数
+        int x = 1;
+        int y = 0;
 
+        // 缓存数据
+        SparseArray<CodeDataModel> tmpCodeMap = new SparseArray<>();
+        for (int i = 0; i < mCodeMap.size(); i++) {
+            int key = mCodeMap.keyAt(i);
+            CodeDataModel model = mCodeMap.get(key);
+            tmpCodeMap.put(key, model);
+        }
+
+        while (true) {
+            // 无限循环往下找
+            int cell = findFirstEmptyCell(x, y+1);
+            if (cell != -1) {
+                x = cell / 10;
+                y = cell % 10;
+
+                List<Integer> list = Tools.getCalcualtor(x, y, mCodeMap, true);
+                // 进行一次的猜数
+                for (Integer i : list) {
+                    if (i==0){
+                        continue;
+                    }
+                    Log.d(TAG, "当前测试第 "+x+","+y+" 格子, 填入数据 = "+i);
+                    mCodeMap.put(cell , new CodeDataModel(x,  y, i, true));
+                    if (fillCell()) {
+                        // 已经填满
+                        return true;
+                    }
+                }
+                // 到这里说明猜第一个格子没猜到数字，只能猜第二个格子，还原表格
+                mCodeMap = new SparseArray<>();
+                for (int i = 0; i < tmpCodeMap.size(); i++) {
+                    int key = tmpCodeMap.keyAt(i);
+                    CodeDataModel model = tmpCodeMap.get(key);
+                    mCodeMap.put(key, model);
+                }
+            }else {
+                // cell = -1 往后不存在没填满的格子
+                return false;
+            }
+        }
+    }
+
+    // 测试连猜两个单元格
+    private boolean guessTwoCell(){
+        // 猜一个单元格都没猜到，只能两个格子了
+        int x = 1;
+        int y = 0;
+
+        // 缓存数据
+        SparseArray<CodeDataModel> tmpCodeMap = new SparseArray<>();
+        for (int i = 0; i < mCodeMap.size(); i++) {
+            int key = mCodeMap.keyAt(i);
+            CodeDataModel model = mCodeMap.get(key);
+            tmpCodeMap.put(key, model);
+        }
+
+        while (true){
+            // 无限循环往下找
+            int cell1 = findFirstEmptyCell(x, y+1);
+            int cell2 = findFirstEmptyCell(cell1/10, cell1%10+1);
+
+            List<Integer> list1 = Tools.getCalcualtor(cell1/10, cell1%10, mCodeMap, true);
+            List<Integer> list2 = Tools.getCalcualtor(cell2/10, cell2%10, mCodeMap, true);
+
+            Log.d(TAG, "获取到格子："+cell1+" , "+cell2);
+
+            if (cell1 != -1 && cell2 != -1) {
+                // 记录第一个格子的位置
+                x = cell1 / 10;
+                y = cell1 % 10;
+
+                for (int i = 0; i < list1.size(); i++) {
+                    if (list1.get(i) == 0) {
+                        continue;
+                    }
+                    for (int j = 0; j < list2.size(); j++) {
+                        if (list2.get(j) == 0) {
+                            continue;
+                        }
+
+                        // 开始连猜两个数
+                        Log.d(TAG, "当前测试第 " + cell1 + "," + cell2 + " 格子, 填入数据 = " + list1.get(i) + " , " + list2.get(j));
+                        mCodeMap.put(cell1, new CodeDataModel(cell1 / 10, cell1 % 10, list1.get(i), true));
+                        mCodeMap.put(cell2, new CodeDataModel(cell2 / 10, cell2 % 10, list2.get(j), true));
+                        if (fillCell()) {
+                            // 已经填满
+                            return true;
+                        }
+                    }
+                }
+
+                // 到这里说明猜第一个格子没猜到数字，只能猜第二个格子，还原表格
+                mCodeMap = new SparseArray<>();
+                for (int k = 0; k < tmpCodeMap.size(); k++) {
+                    int key = tmpCodeMap.keyAt(k);
+                    CodeDataModel model = tmpCodeMap.get(key);
+                    mCodeMap.put(key, model);
+                }
+            }else {
+                return false;
+            }
+        }
+    }
+
+    // 测试计算单元格
     private boolean fillCell(){
         int calculatorTime = 0;
 
@@ -394,8 +463,14 @@ public class SudokuView extends View {
      * 横向顺序查找第一个没有填满的格子
      **/
     private int findFirstEmptyCell(int k, int m) {
+        int j;
         for (int i = k; i <= 9; i++) {
-            for (int j = m; j <= 9; j++) {
+            if (i == k){
+                j = m;
+            }else {
+                j=1;
+            }
+            for (; j <= 9; j++) {
                 if (mCodeMap.get(i * 10 + j) == null) {
                     return i * 10 + j;
                 }
