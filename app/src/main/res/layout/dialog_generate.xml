@@ -9,7 +9,7 @@
     <EditText
         android:id="@+id/count"
         android:inputType="number"
-        android:hint="输入需要隐藏数字数量，默认为45"
+        android:hint="输入需要隐藏数字数量，默认为64"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

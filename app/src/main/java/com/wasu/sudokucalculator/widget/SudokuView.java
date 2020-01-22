@@ -288,7 +288,9 @@ public class SudokuView extends View {
             if (!guessOneCell()){
                 // 猜1个数也没填满
                 Log.d(TAG, "1个格子也没猜到");
-                guessTwoCell();
+                if (!guessTwoCell()){
+                    guessThreeCell();
+                }
             }
         }
 
@@ -394,6 +396,78 @@ public class SudokuView extends View {
                         if (fillCell()) {
                             // 已经填满
                             return true;
+                        }
+                    }
+                }
+
+                // 到这里说明猜第一个格子没猜到数字，只能猜第二个格子，还原表格
+                mCodeMap = new SparseArray<>();
+                for (int k = 0; k < tmpCodeMap.size(); k++) {
+                    int key = tmpCodeMap.keyAt(k);
+                    CodeDataModel model = tmpCodeMap.get(key);
+                    mCodeMap.put(key, model);
+                }
+            }else {
+                return false;
+            }
+        }
+    }
+
+    // 测试连猜3个单元格
+    private boolean guessThreeCell(){
+        // 猜一个单元格都没猜到，只能两个格子了
+        int x = 1;
+        int y = 0;
+
+        // 缓存数据
+        SparseArray<CodeDataModel> tmpCodeMap = new SparseArray<>();
+        for (int i = 0; i < mCodeMap.size(); i++) {
+            int key = mCodeMap.keyAt(i);
+            CodeDataModel model = mCodeMap.get(key);
+            tmpCodeMap.put(key, model);
+        }
+
+        while (true){
+            // 无限循环往下找
+            int cell1 = findFirstEmptyCell(x, y+1);
+            int cell2 = findFirstEmptyCell(cell1/10, cell1%10+1);
+            int cell3 = findFirstEmptyCell(cell2/10, cell2%10+1);
+
+            List<Integer> list1 = Tools.getCalcualtor(cell1/10, cell1%10, mCodeMap, true);
+            List<Integer> list2 = Tools.getCalcualtor(cell2/10, cell2%10, mCodeMap, true);
+            List<Integer> list3 = Tools.getCalcualtor(cell3/10, cell3%10, mCodeMap, true);
+
+            Log.d(TAG, "获取到格子："+cell1+" , "+cell2+" , "+cell3);
+
+            if (cell1 != -1 && cell2 != -1 && cell3 != -1) {
+                // 记录第一个格子的位置
+                x = cell1 / 10;
+                y = cell1 % 10;
+
+                for (int i = 0; i < list1.size(); i++) {
+                    if (list1.get(i) == 0) {
+                        continue;
+                    }
+                    for (int j = 0; j < list2.size(); j++) {
+                        if (list2.get(j) == 0) {
+                            continue;
+                        }
+
+                        for (int m = 0; m < list3.size(); m++){
+                            if (list3.get(m) == 0) {
+                                continue;
+                            }
+
+                            // 开始连猜两个数
+                            Log.d(TAG, "当前测试第 " + cell1 + "," + cell2 + "," +cell3 + " 格子, 填入数据 = " + list1.get(i) + " , " + list2.get(j) + " , " + list3.get(m));
+                            mCodeMap.put(cell1, new CodeDataModel(cell1 / 10, cell1 % 10, list1.get(i), true));
+                            mCodeMap.put(cell2, new CodeDataModel(cell2 / 10, cell2 % 10, list2.get(j), true));
+                            mCodeMap.put(cell3, new CodeDataModel(cell3 / 10, cell3 % 10, list3.get(m), true));
+                            if (fillCell()) {
+                                // 已经填满
+                                return true;
+                            }
+
                         }
                     }
                 }
